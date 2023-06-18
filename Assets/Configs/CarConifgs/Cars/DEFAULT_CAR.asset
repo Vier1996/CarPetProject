@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 76451447fc774f88ae3206158d6439c5, type: 3}
-  m_Name: PROTOTYPE_CAR
+  m_Name: DEFAULT_CAR
   m_EditorClassIdentifier: 
-  CarType: -1
+  CarType: 0
   MaxForwardSpeed: 90
   MaxReverseSpeed: 45
   AccelerationMultiplier: 4

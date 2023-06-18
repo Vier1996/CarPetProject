@@ -1,3 +1,5 @@
+using System;
+using Codebase.Extension.Rx;
 using Codebase.Gameplay.CarDetails.Config;
 using UnityEngine;
 
@@ -9,37 +11,44 @@ namespace Codebase.Gameplay.CarDetails
     
     [Space(10)] 
     public Vector3 bodyMassCenter;
-
-    public GameObject frontLeftMesh;
-    public WheelCollider frontLeftCollider;
-    [Space(10)] public GameObject frontRightMesh;
-    public WheelCollider frontRightCollider;
-    [Space(10)] public GameObject rearLeftMesh;
-    public WheelCollider rearLeftCollider;
-    [Space(10)] public GameObject rearRightMesh;
-    public WheelCollider rearRightCollider;
-
-
-    public ParticleSystem RLWParticleSystem;
-    public ParticleSystem RRWParticleSystem;
+    
+    [Space(10)]
+    [SerializeField] private GameObject frontLeftMesh;
+    [SerializeField] private WheelCollider frontLeftCollider;
+    [SerializeField] private GameObject frontRightMesh;
+    [SerializeField] private WheelCollider frontRightCollider;
+    [SerializeField] private GameObject rearLeftMesh;
+    [SerializeField] private WheelCollider rearLeftCollider;
+    [SerializeField] private GameObject rearRightMesh;
+    [SerializeField] private WheelCollider rearRightCollider;
 
     [Space(10)] 
-    public TrailRenderer RLWTireSkid;
-    public TrailRenderer RRWTireSkid;
+    [SerializeField] private ParticleSystem RLWParticleSystem;
+    [SerializeField] private ParticleSystem RRWParticleSystem;
+    [SerializeField] private TrailRenderer RLWTireSkid;
+    [SerializeField] private TrailRenderer RRWTireSkid;
     
-    public AudioSource carEngineSound;
-    public AudioSource tireScreechSound;
-    float initialCarEngineSoundPitch;
-
+    [Space(10)] 
+    [SerializeField] private AudioSource carEngineSound;
+    [SerializeField] private AudioSource tireScreechSound;
+    
     private CarConfig _currentConfig;
     private Rigidbody carRigidbody;
-
+    private IDisposable _decelerateDisposable;
+    private IDisposable _recoverTractionDisposable;
+    
     private float carSpeed;
     private float steeringAxis;
     private float throttleAxis;
     private float driftingAxis;
     private float localVelocityZ;
     private float localVelocityX;
+    private float initialCarEngineSoundPitch;
+    private float FLWextremumSlip;
+    private float FRWextremumSlip;
+    private float RLWextremumSlip;
+    private float RRWextremumSlip;
+    
     private bool deceleratingCar;
     private bool isDrifting;
     private bool isTractionLocked;
@@ -48,11 +57,6 @@ namespace Codebase.Gameplay.CarDetails
     private WheelFrictionCurve FRwheelFriction;
     private WheelFrictionCurve RLwheelFriction;
     private WheelFrictionCurve RRwheelFriction;
-    
-    private float FLWextremumSlip;
-    private float FRWextremumSlip;
-    private float RLWextremumSlip;
-    private float RRWextremumSlip;
 
     private void Start()
     {
@@ -72,24 +76,24 @@ namespace Codebase.Gameplay.CarDetails
       FRwheelFriction = SetupFriction(FLwheelFriction, frontRightCollider);
       RLwheelFriction = SetupFriction(FLwheelFriction, rearLeftCollider);
       RRwheelFriction = SetupFriction(FLwheelFriction, rearRightCollider);
-      
-      WheelFrictionCurve SetupFriction(WheelFrictionCurve targetCurve, WheelCollider wheelCollider)
-      {
-        WheelFrictionCurve curve = wheelCollider.sidewaysFriction;
-        
-        targetCurve.extremumSlip = curve.extremumSlip;
-        targetCurve.extremumValue = curve.extremumValue;
-        targetCurve.asymptoteSlip = curve.asymptoteSlip;
-        targetCurve.asymptoteValue = curve.asymptoteValue;
-        targetCurve.stiffness = curve.stiffness;
 
-        return targetCurve;
-      }
-      
       if (carEngineSound != null) 
         initialCarEngineSoundPitch = carEngineSound.pitch;
+      
+      gameObject.RxRepeat(0f, 0.1f, CarSounds);
+    }
+    
+    private WheelFrictionCurve SetupFriction(WheelFrictionCurve targetCurve, WheelCollider wheelCollider)
+    {
+      WheelFrictionCurve curve = wheelCollider.sidewaysFriction;
+        
+      targetCurve.extremumSlip = curve.extremumSlip;
+      targetCurve.extremumValue = curve.extremumValue;
+      targetCurve.asymptoteSlip = curve.asymptoteSlip;
+      targetCurve.asymptoteValue = curve.asymptoteValue;
+      targetCurve.stiffness = curve.stiffness;
 
-      InvokeRepeating(nameof(CarSounds), 0f, 0.1f);
+      return targetCurve;
     }
 
     private void Update()
@@ -100,14 +104,14 @@ namespace Codebase.Gameplay.CarDetails
 
         if (Input.GetKey(KeyCode.W))
         {
-          CancelInvoke(nameof(DecelerateCar));
+          _decelerateDisposable?.Dispose();
           deceleratingCar = false;
           MoveUp();
         }
 
         if (Input.GetKey(KeyCode.S))
         {
-          CancelInvoke(nameof(DecelerateCar));
+          _decelerateDisposable?.Dispose();
           deceleratingCar = false;
           MoveDown();
         }
@@ -124,7 +128,7 @@ namespace Codebase.Gameplay.CarDetails
 
         if (Input.GetKey(KeyCode.Space))
         {
-          CancelInvoke(nameof(DecelerateCar));
+          _decelerateDisposable?.Dispose();
           deceleratingCar = false;
           UseHandbrake();
         }
@@ -141,7 +145,7 @@ namespace Codebase.Gameplay.CarDetails
 
         if ((!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.W)) && !Input.GetKey(KeyCode.Space) && !deceleratingCar)
         {
-          InvokeRepeating(nameof(DecelerateCar), 0f, 0.1f);
+          _decelerateDisposable = gameObject.RxRepeat(0f, 0.1f, DecelerateCar);
           deceleratingCar = true;
         }
 
@@ -155,16 +159,7 @@ namespace Codebase.Gameplay.CarDetails
     
     public void MoveUp()
     {
-      if (Mathf.Abs(localVelocityX) > 2.5f)
-      {
-        isDrifting = true;
-        DriftCarPS();
-      }
-      else
-      {
-        isDrifting = false;
-        DriftCarPS();
-      }
+      ValidateVelocityDrift();
 
       throttleAxis += (Time.deltaTime * 3f);
       if (throttleAxis > 1f)
@@ -177,39 +172,12 @@ namespace Codebase.Gameplay.CarDetails
         Brakes();
       }
       else
-      {
-        if (Mathf.RoundToInt(carSpeed) < _currentConfig.MaxForwardSpeed)
-        {
-          frontLeftCollider.brakeTorque = 0;
-          frontLeftCollider.motorTorque = (_currentConfig.AccelerationMultiplier * 50f) * throttleAxis;
-          frontRightCollider.brakeTorque = 0;
-          frontRightCollider.motorTorque = (_currentConfig.AccelerationMultiplier * 50f) * throttleAxis;
-          rearLeftCollider.brakeTorque = 0;
-          rearLeftCollider.motorTorque = (_currentConfig.AccelerationMultiplier * 50f) * throttleAxis;
-          rearRightCollider.brakeTorque = 0;
-          rearRightCollider.motorTorque = (_currentConfig.AccelerationMultiplier * 50f) * throttleAxis;
-        }
-        else
-        {
-          frontLeftCollider.motorTorque = 0;
-          frontRightCollider.motorTorque = 0;
-          rearLeftCollider.motorTorque = 0;
-          rearRightCollider.motorTorque = 0;
-        }
-      }
+        ApplyBrakeTorque(Mathf.RoundToInt(carSpeed) < _currentConfig.MaxForwardSpeed);
     }
+
     public void MoveDown()
     {
-      if (Mathf.Abs(localVelocityX) > 2.5f)
-      {
-        isDrifting = true;
-        DriftCarPS();
-      }
-      else
-      {
-        isDrifting = false;
-        DriftCarPS();
-      }
+      ValidateVelocityDrift();
 
       throttleAxis -= (Time.deltaTime * 3f);
       if (throttleAxis < -1f)
@@ -222,59 +190,33 @@ namespace Codebase.Gameplay.CarDetails
         Brakes();
       }
       else
-      {
-        if (Mathf.Abs(Mathf.RoundToInt(carSpeed)) < _currentConfig.MaxReverseSpeed)
-        {
-          frontLeftCollider.brakeTorque = 0;
-          frontLeftCollider.motorTorque = (_currentConfig.AccelerationMultiplier * 50f) * throttleAxis;
-          frontRightCollider.brakeTorque = 0;
-          frontRightCollider.motorTorque = (_currentConfig.AccelerationMultiplier * 50f) * throttleAxis;
-          rearLeftCollider.brakeTorque = 0;
-          rearLeftCollider.motorTorque = (_currentConfig.AccelerationMultiplier * 50f) * throttleAxis;
-          rearRightCollider.brakeTorque = 0;
-          rearRightCollider.motorTorque = (_currentConfig.AccelerationMultiplier * 50f) * throttleAxis;
-        }
-        else
-        {
+        ApplyBrakeTorque(Mathf.Abs(Mathf.RoundToInt(carSpeed)) < _currentConfig.MaxReverseSpeed);
+    }
 
-          frontLeftCollider.motorTorque = 0;
-          frontRightCollider.motorTorque = 0;
-          rearLeftCollider.motorTorque = 0;
-          rearRightCollider.motorTorque = 0;
-        }
-      }
-    }   
-    
     public void TurnRight()
     {
       steeringAxis += (Time.deltaTime * 10f * _currentConfig.SteeringSpeed);
-      if (steeringAxis > 1f)
-      {
+      
+      if (steeringAxis > 1f) 
         steeringAxis = 1f;
-      }
 
-      float steeringAngle = steeringAxis * _currentConfig.MaxSteeringAngle;
-      frontLeftCollider.steerAngle = Mathf.Lerp(frontLeftCollider.steerAngle, steeringAngle, _currentConfig.SteeringSpeed);
-      frontRightCollider.steerAngle = Mathf.Lerp(frontRightCollider.steerAngle, steeringAngle, _currentConfig.SteeringSpeed);
+      ApplyTurnSteering();
     }
     
     public void TurnLeft()
     {
       steeringAxis -= (Time.deltaTime * 10f * _currentConfig.SteeringSpeed);
-      if (steeringAxis < -1f)
-      {
+      
+      if (steeringAxis < -1f) 
         steeringAxis = -1f;
-      }
 
-      float steeringAngle = steeringAxis * _currentConfig.MaxSteeringAngle;
-      frontLeftCollider.steerAngle = Mathf.Lerp(frontLeftCollider.steerAngle, steeringAngle, _currentConfig.SteeringSpeed);
-      frontRightCollider.steerAngle = Mathf.Lerp(frontRightCollider.steerAngle, steeringAngle, _currentConfig.SteeringSpeed);
+      ApplyTurnSteering();
     }
 
     public void UseHandbrake()
     {
-      CancelInvoke(nameof(RecoverTraction));
-
+      _recoverTractionDisposable?.Dispose();
+      
       driftingAxis += (Time.deltaTime);
       float secureStartingPoint = driftingAxis * FLWextremumSlip * _currentConfig.HandbrakeDriftMultiplier;
 
@@ -329,26 +271,64 @@ namespace Codebase.Gameplay.CarDetails
         tireScreechSound.Stop();
       }
     }
+    
+    private void ApplyTurnSteering()
+    {
+      float steeringAngle = steeringAxis * _currentConfig.MaxSteeringAngle;
+      frontLeftCollider.steerAngle = Mathf.Lerp(frontLeftCollider.steerAngle, steeringAngle, _currentConfig.SteeringSpeed);
+      frontRightCollider.steerAngle = Mathf.Lerp(frontRightCollider.steerAngle, steeringAngle, _currentConfig.SteeringSpeed);
+    }
 
     private void ResetSteeringAngle()
     {
       if (steeringAxis < 0f)
-      {
         steeringAxis += (Time.deltaTime * 10f * _currentConfig.SteeringSpeed);
-      }
-      else if (steeringAxis > 0f)
-      {
+      else if (steeringAxis > 0f) 
         steeringAxis -= (Time.deltaTime * 10f * _currentConfig.SteeringSpeed);
-      }
 
-      if (Mathf.Abs(frontLeftCollider.steerAngle) < 1f)
-      {
+      if (Mathf.Abs(frontLeftCollider.steerAngle) < 1f) 
         steeringAxis = 0f;
-      }
 
-      var steeringAngle = steeringAxis * _currentConfig.MaxSteeringAngle;
+      float steeringAngle = steeringAxis * _currentConfig.MaxSteeringAngle;
       frontLeftCollider.steerAngle = Mathf.Lerp(frontLeftCollider.steerAngle, steeringAngle, _currentConfig.SteeringSpeed);
       frontRightCollider.steerAngle = Mathf.Lerp(frontRightCollider.steerAngle, steeringAngle, _currentConfig.SteeringSpeed);
+    }
+    
+    private void ValidateVelocityDrift()
+    {
+      if (Mathf.Abs(localVelocityX) > 2.5f)
+      {
+        isDrifting = true;
+        DriftCarPS();
+      }
+      else
+      {
+        isDrifting = false;
+        DriftCarPS();
+      }
+    }
+    
+    private void ApplyBrakeTorque(bool predicate)
+    {
+      if (predicate)
+      {
+        frontLeftCollider.brakeTorque = 0;
+        frontLeftCollider.motorTorque = (_currentConfig.AccelerationMultiplier * 50f) * throttleAxis;
+        frontRightCollider.brakeTorque = 0;
+        frontRightCollider.motorTorque = (_currentConfig.AccelerationMultiplier * 50f) * throttleAxis;
+        rearLeftCollider.brakeTorque = 0;
+        rearLeftCollider.motorTorque = (_currentConfig.AccelerationMultiplier * 50f) * throttleAxis;
+        rearRightCollider.brakeTorque = 0;
+        rearRightCollider.motorTorque = (_currentConfig.AccelerationMultiplier * 50f) * throttleAxis;
+      }
+      else
+      {
+
+        frontLeftCollider.motorTorque = 0;
+        frontRightCollider.motorTorque = 0;
+        rearLeftCollider.motorTorque = 0;
+        rearRightCollider.motorTorque = 0;
+      }
     }
 
     private void AnimateWheelMeshes()
@@ -413,7 +393,7 @@ namespace Codebase.Gameplay.CarDetails
       if (carRigidbody.velocity.magnitude < 0.25f)
       {
         carRigidbody.velocity = Vector3.zero;
-        CancelInvoke(nameof(DecelerateCar));
+        _decelerateDisposable?.Dispose();
       }
     }
 
@@ -473,8 +453,7 @@ namespace Codebase.Gameplay.CarDetails
         RRwheelFriction.extremumSlip = RRWextremumSlip * _currentConfig.HandbrakeDriftMultiplier * driftingAxis;
         rearRightCollider.sidewaysFriction = RRwheelFriction;
 
-        Invoke(nameof(RecoverTraction), Time.deltaTime);
-
+        _recoverTractionDisposable = gameObject.RxInvoke(Time.deltaTime, RecoverTraction);
       }
       else if (FLwheelFriction.extremumSlip < FLWextremumSlip)
       {
