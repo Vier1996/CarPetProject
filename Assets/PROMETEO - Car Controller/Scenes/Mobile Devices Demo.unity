@@ -15846,14 +15846,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40554845471de524381ff91ddbceff63, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxSpeed: 90
-  maxReverseSpeed: 45
-  accelerationMultiplier: 2
-  maxSteeringAngle: 27
-  steeringSpeed: 0.5
-  brakeForce: 350
-  decelerationMultiplier: 2
-  handbrakeDriftMultiplier: 5
+  _debugConfig: {fileID: 11400000, guid: 513abaa76017bca4ab4468869904b1ba, type: 2}
   bodyMassCenter: {x: 0, y: 0, z: 0}
   frontLeftMesh: {fileID: 8649133034522351001}
   frontLeftCollider: {fileID: 2239677824881771140}
@@ -15863,25 +15856,12 @@ MonoBehaviour:
   rearLeftCollider: {fileID: 8615825633086844904}
   rearRightMesh: {fileID: 2077481708338591375}
   rearRightCollider: {fileID: 8706808774400665247}
-  useEffects: 1
   RLWParticleSystem: {fileID: 4402756320793090202}
   RRWParticleSystem: {fileID: 4402756321067722654}
   RLWTireSkid: {fileID: 7045468751779098449}
   RRWTireSkid: {fileID: 7045468751141117335}
-  useUI: 1
-  carSpeedText: {fileID: 329528919}
-  useSounds: 1
   carEngineSound: {fileID: 1109746025}
   tireScreechSound: {fileID: 1079542301}
-  useTouchControls: 0
-  throttleButton: {fileID: 0}
-  reverseButton: {fileID: 0}
-  turnRightButton: {fileID: 0}
-  turnLeftButton: {fileID: 0}
-  handbrakeButton: {fileID: 0}
-  carSpeed: 0
-  isDrifting: 0
-  isTractionLocked: 0
 --- !u!4 &5534550323529671525
 Transform:
   m_ObjectHideFlags: 0
