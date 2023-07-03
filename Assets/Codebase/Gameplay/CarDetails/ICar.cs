@@ -7,5 +7,9 @@
         public void TurnRight();
         public void TurnLeft();
         public void UseHandbrake();
+        public void RecoverTraction();
+        public void ResetSteeringAngle();
+        public void Decelerate();
+        public void ThrottleOff();
     }
 }
