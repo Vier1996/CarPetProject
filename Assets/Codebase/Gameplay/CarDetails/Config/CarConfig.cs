@@ -21,5 +21,8 @@ namespace Codebase.Gameplay.CarDetails.Config
         [BoxGroup("DECELERATION"), Range(1, 10)] public int DecelerationMultiplier = 2;
         
         [BoxGroup("HAND_BRAKE"), Range(1, 10)] public int HandbrakeDriftMultiplier = 5;
+        
+        [BoxGroup("FUEL"), Range(1, 500)] public float FuelCapacity = 10f;
+        [BoxGroup("FUEL"), Range(0.01f, 10)] public float FuelСonsumption = 0.05f;
     }
 }

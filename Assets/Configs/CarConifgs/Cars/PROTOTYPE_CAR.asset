@@ -21,3 +21,5 @@ MonoBehaviour:
   BrakeForce: 350
   DecelerationMultiplier: 2
   HandbrakeDriftMultiplier: 5
+  FuelCapacity: 5
+  "Fuel\u0421onsumption": 0.1

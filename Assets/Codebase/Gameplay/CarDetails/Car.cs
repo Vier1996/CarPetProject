@@ -8,11 +8,13 @@ namespace Codebase.Gameplay.CarDetails
   public class Car : MonoBehaviour, ICar
   {
     public Transform Transform => _selfTransform;
+    public float FuelCount => fuelCount;
     
     [SerializeField] private CarConfig _debugConfig;
-    [Space(10)] public Vector3 bodyMassCenter;
-
-    [Space(10)] [SerializeField] private GameObject frontLeftMesh;
+    [Space(10)] 
+    public Vector3 bodyMassCenter;
+    [Space(10)] 
+    [SerializeField] private GameObject frontLeftMesh;
     [SerializeField] private WheelCollider frontLeftCollider;
     [SerializeField] private GameObject frontRightMesh;
     [SerializeField] private WheelCollider frontRightCollider;
@@ -20,8 +22,8 @@ namespace Codebase.Gameplay.CarDetails
     [SerializeField] private WheelCollider rearLeftCollider;
     [SerializeField] private GameObject rearRightMesh;
     [SerializeField] private WheelCollider rearRightCollider;
-
-    [Space(10)] [SerializeField] private ParticleSystem RLWParticleSystem;
+    [Space(10)] 
+    [SerializeField] private ParticleSystem RLWParticleSystem;
     [SerializeField] private ParticleSystem RRWParticleSystem;
     [SerializeField] private TrailRenderer RLWTireSkid;
     [SerializeField] private TrailRenderer RRWTireSkid;
@@ -35,6 +37,8 @@ namespace Codebase.Gameplay.CarDetails
     private IDisposable _decelerateDisposable;
     private IDisposable _recoverTractionDisposable;
 
+    private float fuelCount = 0f;
+    private float fuelСonsumption = 0f;
     private float carSpeed;
     private float steeringAxis;
     private float throttleAxis;
@@ -46,8 +50,8 @@ namespace Codebase.Gameplay.CarDetails
     private float FRWextremumSlip;
     private float RLWextremumSlip;
     private float RRWextremumSlip;
-
     private bool deceleratingCar;
+    private bool isInitialized = false;
     private bool isDrifting;
     private bool isTractionLocked;
 
@@ -57,31 +61,6 @@ namespace Codebase.Gameplay.CarDetails
     private WheelFrictionCurve RRwheelFriction;
 
     private void Awake() => _selfTransform = transform;
-
-    private void Start()
-    {
-      _currentConfig = _debugConfig;
-
-      carRigidbody = gameObject.GetComponent<Rigidbody>();
-      carRigidbody.centerOfMass = bodyMassCenter;
-
-      FLwheelFriction = FRwheelFriction = RLwheelFriction = RRwheelFriction = new WheelFrictionCurve();
-
-      FLWextremumSlip = frontLeftCollider.sidewaysFriction.extremumSlip;
-      FRWextremumSlip = frontRightCollider.sidewaysFriction.extremumSlip;
-      RLWextremumSlip = rearLeftCollider.sidewaysFriction.extremumSlip;
-      RRWextremumSlip = rearRightCollider.sidewaysFriction.extremumSlip;
-
-      FLwheelFriction = SetupFriction(FLwheelFriction, frontLeftCollider);
-      FRwheelFriction = SetupFriction(FLwheelFriction, frontRightCollider);
-      RLwheelFriction = SetupFriction(FLwheelFriction, rearLeftCollider);
-      RRwheelFriction = SetupFriction(FLwheelFriction, rearRightCollider);
-
-      if (carEngineSound != null)
-        initialCarEngineSoundPitch = carEngineSound.pitch;
-
-      gameObject.RxRepeat(0f, 0.1f, CarSounds);
-    }
 
     private WheelFrictionCurve SetupFriction(WheelFrictionCurve targetCurve, WheelCollider wheelCollider)
     {
@@ -98,21 +77,51 @@ namespace Codebase.Gameplay.CarDetails
 
     private void Update()
     {
+      if(!isInitialized) return;
+      
       carSpeed = (2 * Mathf.PI * frontLeftCollider.radius * frontLeftCollider.rpm * 60) / 1000;
       localVelocityX = transform.InverseTransformDirection(carRigidbody.velocity).x;
       localVelocityZ = transform.InverseTransformDirection(carRigidbody.velocity).z;
       
       AnimateWheelMeshes();
     }
+    
+    public void Init()
+    {
+      _currentConfig = _debugConfig;
+      carRigidbody = gameObject.GetComponent<Rigidbody>();
+      carRigidbody.centerOfMass = bodyMassCenter;
+      FLwheelFriction = FRwheelFriction = RLwheelFriction = RRwheelFriction = new WheelFrictionCurve();
+      FLWextremumSlip = frontLeftCollider.sidewaysFriction.extremumSlip;
+      FRWextremumSlip = frontRightCollider.sidewaysFriction.extremumSlip;
+      RLWextremumSlip = rearLeftCollider.sidewaysFriction.extremumSlip;
+      RRWextremumSlip = rearRightCollider.sidewaysFriction.extremumSlip;
+      FLwheelFriction = SetupFriction(FLwheelFriction, frontLeftCollider);
+      FRwheelFriction = SetupFriction(FLwheelFriction, frontRightCollider);
+      RLwheelFriction = SetupFriction(FLwheelFriction, rearLeftCollider);
+      RRwheelFriction = SetupFriction(FLwheelFriction, rearRightCollider);
+      fuelCount = _debugConfig.FuelCapacity;
+      
+      if (carEngineSound != null)
+        initialCarEngineSoundPitch = carEngineSound.pitch;
+
+      gameObject.RxRepeat(0f, 0.1f, CarSounds);
+
+      isInitialized = true;
+    }
 
     public void MoveUp()
     {
+      if(fuelCount <= 0) return;
+
       _decelerateDisposable?.Dispose();
       deceleratingCar = false;
       
       ValidateVelocityDrift();
 
       throttleAxis += (Time.deltaTime * 3f);
+      fuelCount -= _debugConfig.FuelСonsumption * Time.deltaTime;
+      
       if (throttleAxis > 1f)
       {
         throttleAxis = 1f;
@@ -128,12 +137,16 @@ namespace Codebase.Gameplay.CarDetails
 
     public void MoveDown()
     {
+      if(fuelCount <= 0) return;
+
       _decelerateDisposable?.Dispose();
       deceleratingCar = false;
       
       ValidateVelocityDrift();
 
       throttleAxis -= (Time.deltaTime * 3f);
+      fuelCount -= _debugConfig.FuelСonsumption * Time.deltaTime;
+
       if (throttleAxis < -1f)
       {
         throttleAxis = -1f;
