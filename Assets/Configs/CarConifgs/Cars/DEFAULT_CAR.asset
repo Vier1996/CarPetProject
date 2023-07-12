@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 76451447fc774f88ae3206158d6439c5, type: 3}
   m_Name: DEFAULT_CAR
   m_EditorClassIdentifier: 
-  CarType: 0
+  CarType: 1
   MaxForwardSpeed: 90
   MaxReverseSpeed: 45
   AccelerationMultiplier: 4
@@ -21,3 +21,5 @@ MonoBehaviour:
   BrakeForce: 350
   DecelerationMultiplier: 2
   HandbrakeDriftMultiplier: 5
+  FuelCapacity: 10
+  "Fuel\u0421onsumption": 0.05

@@ -1,4 +1,5 @@
-﻿using Sirenix.OdinInspector;
+﻿using Codebase.Gameplay.Enums;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace Codebase.Gameplay.CarDetails.Config

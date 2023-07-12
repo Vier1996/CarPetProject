@@ -1,5 +1,10 @@
 {
   "dependencies": {
+    "com.alexplay.core": "https://github.com/Vier1996/CoreServices.git?path=Packages/com.alexplay.core",
+    "com.alexplay.data": "https://github.com/Vier1996/CoreServices.git?path=Packages/com.alexplay.data",
+    "com.alexplay.dialog": "https://github.com/Vier1996/CoreServices.git?path=Packages/com.alexplay.dialog",
+    "com.alexplay.signal_bus": "https://github.com/Vier1996/CoreServices.git?path=Packages/com.alexplay.signal-bus",
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.unity.2d.tilemap.extras": "2.2.5",
     "com.unity.collab-proxy": "1.17.7",
     "com.unity.feature.2d": "1.0.0",

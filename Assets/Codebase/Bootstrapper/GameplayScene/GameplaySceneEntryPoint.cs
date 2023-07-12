@@ -1,20 +1,22 @@
-using Codebase.Gameplay.CarDetails;
+using Codebase.Gameplay.Entities;
+using Codebase.Gameplay.Managers;
 using UnityEngine;
 
 namespace Codebase.Bootstrapper.GameplayScene
 {
     public class GameplaySceneEntryPoint : MonoBehaviour
     {
-        [SerializeField] private Car _targetCar;
+        [SerializeField] private Player _player;
+        [SerializeField] private GameplayManager _gameplayManager;
         [SerializeField] private GameplaySceneCompositor _sceneCompositor;
         
         private void Start() => PrepareScene();
 
         private void PrepareScene()
         {
-            _targetCar.Init();
-            
-            _sceneCompositor.Composite(_targetCar);
+            _gameplayManager.Init(_player);
+            _player.Init();
+            _sceneCompositor.Composite(_player.GetPlayerCar());
         }
     }
 }

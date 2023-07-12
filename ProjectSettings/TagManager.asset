@@ -23,9 +23,9 @@ TagManager:
   - PW_Object_Small
   - PW_Object_Medium
   - PW_Object_Large
-  - 
-  - 
-  - 
+  - PlayerCar
+  - PursuitCar
+  - Trigger
   - 
   - 
   - 
@@ -49,4 +49,7 @@ TagManager:
     locked: 0
   - name: UI
     uniqueID: 1380824213
+    locked: 0
+  - name: Dialog
+    uniqueID: 2106271250
     locked: 0

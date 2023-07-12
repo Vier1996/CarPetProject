@@ -51,7 +51,7 @@ namespace Codebase.Gameplay.CarDetails
     private float RLWextremumSlip;
     private float RRWextremumSlip;
     private bool deceleratingCar;
-    private bool isInitialized = false;
+    private bool isLaunched = false;
     private bool isDrifting;
     private bool isTractionLocked;
 
@@ -77,7 +77,7 @@ namespace Codebase.Gameplay.CarDetails
 
     private void Update()
     {
-      if(!isInitialized) return;
+      if(!isLaunched) return;
       
       carSpeed = (2 * Mathf.PI * frontLeftCollider.radius * frontLeftCollider.rpm * 60) / 1000;
       localVelocityX = transform.InverseTransformDirection(carRigidbody.velocity).x;
@@ -106,13 +106,11 @@ namespace Codebase.Gameplay.CarDetails
         initialCarEngineSoundPitch = carEngineSound.pitch;
 
       gameObject.RxRepeat(0f, 0.1f, CarSounds);
-
-      isInitialized = true;
     }
 
     public void MoveUp()
     {
-      if(fuelCount <= 0) return;
+      if(!isLaunched || fuelCount <= 0) return;
 
       _decelerateDisposable?.Dispose();
       deceleratingCar = false;
@@ -137,7 +135,7 @@ namespace Codebase.Gameplay.CarDetails
 
     public void MoveDown()
     {
-      if(fuelCount <= 0) return;
+      if(!isLaunched || fuelCount <= 0) return;
 
       _decelerateDisposable?.Dispose();
       deceleratingCar = false;
@@ -300,7 +298,11 @@ namespace Codebase.Gameplay.CarDetails
       rearLeftCollider.motorTorque = 0;
       rearRightCollider.motorTorque = 0;
     }
-    
+
+    public void SwitchOnCar() => isLaunched = true;
+
+    public void SwitchOffCar() => isLaunched = false;
+
     private void CarSounds()
     {
       if (carEngineSound != null)

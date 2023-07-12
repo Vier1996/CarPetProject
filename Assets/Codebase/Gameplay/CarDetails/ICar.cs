@@ -11,5 +11,7 @@
         public void ResetSteeringAngle();
         public void Decelerate();
         public void ThrottleOff();
+        public void SwitchOnCar();
+        public void SwitchOffCar();
     }
 }

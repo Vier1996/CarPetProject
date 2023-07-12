@@ -384,20 +384,6 @@ namespace UniRx
             }
         }
 
-        new public static void StopCoroutine(Coroutine coroutine)
-        {
-#if UNITY_EDITOR
-            if (ScenePlaybackDetector.IsPlaying)
-            {
-                MainThreadDispatcher dispatcher = Instance;
-                if (dispatcher != null) (dispatcher as MonoBehaviour).StopCoroutine(coroutine);
-            }
-#else
-                MainThreadDispatcher dispatcher = Instance;
-                if (dispatcher != null) (dispatcher as MonoBehaviour).StopCoroutine(coroutine);
-#endif
-        }
-        
         public static void RegisterUnhandledExceptionCallback(Action<Exception> exceptionCallback)
         {
             if (exceptionCallback == null)

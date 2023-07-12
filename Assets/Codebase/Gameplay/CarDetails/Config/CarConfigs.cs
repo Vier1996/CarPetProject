@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Codebase.Gameplay.Enums;
 using UnityEngine;
 
 namespace Codebase.Gameplay.CarDetails.Config

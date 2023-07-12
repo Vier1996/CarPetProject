@@ -671,10 +671,20 @@ PlayerSettings:
   webGLDecompressionFallback: 0
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    Android: ODIN_INSPECTOR;ODIN_INSPECTOR_3;FLORA_PRESENT;GAIA_MESH_PRESENT;CROSS_PLATFORM_INPUT;MOBILE_INPUT
-    Standalone: CROSS_PLATFORM_INPUT
-    Windows Store Apps: MOBILE_INPUT
-    iPhone: CROSS_PLATFORM_INPUT;MOBILE_INPUT
+    Android: ODIN_INSPECTOR;ODIN_INSPECTOR_3;FLORA_PRESENT;GAIA_MESH_PRESENT;CROSS_PLATFORM_INPUT;MOBILE_INPUT;TextMeshPro;COM_ALEXPLAY_NET_SIGNAL_BUS;COM_ALEXPLAY_NET_DATA;COM_ALEXPLAY_NET_DIALOG;COM_ALEXPLAY_NET_CORE
+    EmbeddedLinux: TextMeshPro
+    GameCoreXboxOne: TextMeshPro
+    Lumin: TextMeshPro
+    Nintendo Switch: TextMeshPro
+    PS4: TextMeshPro
+    PS5: TextMeshPro
+    Stadia: TextMeshPro
+    Standalone: CROSS_PLATFORM_INPUT;TextMeshPro
+    WebGL: TextMeshPro
+    Windows Store Apps: MOBILE_INPUT;TextMeshPro
+    XboxOne: TextMeshPro
+    iPhone: CROSS_PLATFORM_INPUT;MOBILE_INPUT;TextMeshPro
+    tvOS: TextMeshPro
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend: {}
